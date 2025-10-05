@@ -11,11 +11,15 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=False
+        case_sensitive=False,
+        extra="ignore",
     )
     
-    # NASA Earthdata Credentials (Token only)
+    # NASA Earthdata Credentials
+    # Primary: token; Fallbacks: username/password (env) and .netrc
     earthdata_token: str = ""
+    earthdata_username: Optional[str] = None
+    earthdata_password: Optional[str] = None
     
     # NASA FIRMS API
     firms_api_key: str = ""

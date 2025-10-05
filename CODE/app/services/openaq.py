@@ -51,17 +51,17 @@ class OpenAQService:
             List of station data
         """
         try:
-            # OpenAQ v3 uses different parameter format
+            # OpenAQ v3 format: coordinates=longitude,latitude (NOT latitude,longitude!)
             params = {
-                "coordinates": f"{latitude},{longitude}",
+                "coordinates": f"{longitude},{latitude}",  # IMPORTANT: lon,lat order!
                 "radius": int(radius_km * 1000),  # meters
-                "limit": limit,
-                "order_by": "distance",
-                "page": 1
+                "limit": limit
             }
             
             if not self.api_key:
                 logger.warning("OpenAQ API key not configured - requests may be rate limited")
+            
+            logger.info(f"OpenAQ request: coordinates={longitude},{latitude}, radius={params['radius']}m")
             
             response = await self.client.get(
                 f"{self.BASE_URL}/locations",
@@ -105,17 +105,17 @@ class OpenAQService:
             parameters = ["pm25", "pm10", "no2", "o3", "so2", "co"]
         
         try:
-            # OpenAQ v3 - get latest measurements
+            # OpenAQ v3 format: coordinates=longitude,latitude (NOT latitude,longitude!)
             params = {
-                "coordinates": f"{latitude},{longitude}",
+                "coordinates": f"{longitude},{latitude}",  # IMPORTANT: lon,lat order!
                 "radius": int(radius_km * 1000),  # meters
-                "limit": 100,
-                "order_by": "distance",
-                "page": 1
+                "limit": 100
             }
             
             if not self.api_key:
                 logger.warning("OpenAQ API key not configured - requests may be rate limited")
+            
+            logger.info(f"OpenAQ measurements request: coordinates={longitude},{latitude}, radius={params['radius']}m")
             
             # Use /locations endpoint to get stations with latest measurements
             response = await self.client.get(
