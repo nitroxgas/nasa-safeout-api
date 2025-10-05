@@ -1,12 +1,18 @@
 """Configuration management for the application."""
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from typing import Optional
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False
+    )
     
     # NASA Earthdata Credentials
     earthdata_username: str = ""
@@ -37,11 +43,6 @@ class Settings(BaseSettings):
     app_name: str = "NASA SafeOut API"
     app_version: str = "1.0.0"
     app_description: str = "API para consulta de dados ambientais da NASA e outras fontes"
-    
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
 
 
 @lru_cache()

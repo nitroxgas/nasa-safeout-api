@@ -54,10 +54,88 @@ async def get_environmental_data(request: LocationRequest):
         # Initialize environmental data
         env_data = EnvironmentalData()
         
-        # TODO: Implement actual data fetching
-        # For now, return a placeholder response
-        logger.warning("Data fetching not yet implemented - returning placeholder data")
-        warnings.append("Data fetching not yet implemented - placeholder data returned")
+        # Fetch air quality data
+        try:
+            data_sources_queried += 1
+            air_quality = await processor.get_air_quality_data(
+                request.latitude, request.longitude, request.radius_meters
+            )
+            if air_quality:
+                env_data.air_quality = air_quality
+                data_sources_successful += 1
+                logger.info("Air quality data fetched successfully")
+            else:
+                warnings.append("Air quality data unavailable")
+        except Exception as e:
+            logger.error(f"Error fetching air quality data: {e}")
+            warnings.append(f"Air quality data error: {str(e)}")
+        
+        # Fetch fire history data
+        try:
+            data_sources_queried += 1
+            fire_history = await processor.get_fire_history_data(
+                request.latitude, request.longitude, request.radius_meters
+            )
+            if fire_history:
+                env_data.fire_history = fire_history
+                data_sources_successful += 1
+                logger.info("Fire history data fetched successfully")
+            else:
+                warnings.append("Fire history data unavailable")
+        except Exception as e:
+            logger.error(f"Error fetching fire history data: {e}")
+            warnings.append(f"Fire history data error: {str(e)}")
+        
+        # Precipitation data (placeholder - requires earthaccess)
+        try:
+            data_sources_queried += 1
+            precipitation = await processor.get_precipitation_data(
+                request.latitude, request.longitude, request.radius_meters
+            )
+            if precipitation:
+                env_data.precipitation = precipitation
+                data_sources_successful += 1
+            else:
+                warnings.append("Precipitation data unavailable (requires NASA Earthdata credentials)")
+        except Exception as e:
+            logger.error(f"Error fetching precipitation data: {e}")
+            warnings.append(f"Precipitation data error: {str(e)}")
+        
+        # Weather data (placeholder - requires earthaccess)
+        try:
+            data_sources_queried += 1
+            weather = await processor.get_weather_data(
+                request.latitude, request.longitude, request.radius_meters
+            )
+            if weather:
+                env_data.weather = weather
+                data_sources_successful += 1
+            else:
+                warnings.append("Weather data unavailable (requires NASA Earthdata credentials)")
+        except Exception as e:
+            logger.error(f"Error fetching weather data: {e}")
+            warnings.append(f"Weather data error: {str(e)}")
+        
+        # UV index data (placeholder - requires earthaccess)
+        try:
+            data_sources_queried += 1
+            uv_index = await processor.get_uv_index_data(
+                request.latitude, request.longitude, request.radius_meters
+            )
+            if uv_index:
+                env_data.uv_index = uv_index
+                data_sources_successful += 1
+            else:
+                warnings.append("UV index data unavailable (requires NASA Earthdata credentials)")
+        except Exception as e:
+            logger.error(f"Error fetching UV index data: {e}")
+            warnings.append(f"UV index data error: {str(e)}")
+        
+        # Close processor connections
+        try:
+            await processor.close()
+        except Exception as e:
+            logger.error(f"Error closing processor: {e}")
         
         # Calculate processing time
         processing_time = int((time.time() - start_time) * 1000)

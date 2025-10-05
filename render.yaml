@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: nasa-safeout-api
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: cd CODE && pip install -r requirements.txt
+    startCommand: cd CODE && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: EARTHDATA_USERNAME
+        sync: false
+      - key: EARTHDATA_PASSWORD
+        sync: false
+      - key: FIRMS_API_KEY
+        sync: false
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CACHE_DIR
+        value: /tmp/cache

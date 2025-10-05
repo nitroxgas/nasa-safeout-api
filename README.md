@@ -43,6 +43,19 @@ A API estará disponível em: **http://localhost:8000**
 
 ## 📡 Como Usar a API
 
+### 🎯 Página de Teste Interativa (Recomendado!)
+
+Acesse a página de teste com interface gráfica:
+```
+http://localhost:8000/test
+```
+
+Nesta página você pode:
+- ✅ Testar todos os endpoints com cliques
+- ✅ Usar coordenadas pré-definidas de cidades brasileiras
+- ✅ Ver respostas formatadas em tempo real
+- ✅ Validar entradas automaticamente
+
 ### Documentação Interativa
 
 Acesse a documentação Swagger UI em:
@@ -177,6 +190,7 @@ pytest tests/test_api.py -v
 ## 📋 Endpoints Disponíveis
 
 - `GET /` - Informações básicas da API
+- `GET /test` - 🎯 **Página de teste interativa**
 - `GET /health` - Health check
 - `GET /api/v1/info` - Informações sobre fontes de dados
 - `POST /api/v1/environmental-data` - Obter dados ambientais por localização
