@@ -5,17 +5,27 @@ from typing import Optional, List, Dict, Any
 import httpx
 from datetime import datetime
 
+from app.config import get_settings
+
 logger = logging.getLogger(__name__)
+settings = get_settings()
 
 
 class OpenAQService:
     """Service for accessing OpenAQ air quality data."""
     
-    BASE_URL = "https://api.openaq.org/v2"
+    BASE_URL = "https://api.openaq.org/v3"
     
     def __init__(self):
         """Initialize the OpenAQ service."""
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.api_key = settings.openaq_api_key
+        
+        # Set up headers with API key
+        headers = {}
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
+        
+        self.client = httpx.AsyncClient(timeout=30.0, headers=headers)
     
     async def close(self):
         """Close the HTTP client."""
@@ -41,12 +51,17 @@ class OpenAQService:
             List of station data
         """
         try:
+            # OpenAQ v3 uses different parameter format
             params = {
                 "coordinates": f"{latitude},{longitude}",
-                "radius": int(radius_km * 1000),  # Convert to meters
+                "radius": int(radius_km * 1000),  # meters
                 "limit": limit,
-                "order_by": "distance"
+                "order_by": "distance",
+                "page": 1
             }
+            
+            if not self.api_key:
+                logger.warning("OpenAQ API key not configured - requests may be rate limited")
             
             response = await self.client.get(
                 f"{self.BASE_URL}/locations",
@@ -75,7 +90,7 @@ class OpenAQService:
         parameters: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """
-        Get latest measurements from nearby stations.
+        Get latest measurements from nearby stations using OpenAQ v3 API.
         
         Args:
             latitude: Latitude in decimal degrees
@@ -90,15 +105,21 @@ class OpenAQService:
             parameters = ["pm25", "pm10", "no2", "o3", "so2", "co"]
         
         try:
+            # OpenAQ v3 - get latest measurements
             params = {
                 "coordinates": f"{latitude},{longitude}",
-                "radius": int(radius_km * 1000),
+                "radius": int(radius_km * 1000),  # meters
                 "limit": 100,
-                "order_by": "distance"
+                "order_by": "distance",
+                "page": 1
             }
             
+            if not self.api_key:
+                logger.warning("OpenAQ API key not configured - requests may be rate limited")
+            
+            # Use /locations endpoint to get stations with latest measurements
             response = await self.client.get(
-                f"{self.BASE_URL}/latest",
+                f"{self.BASE_URL}/locations",
                 params=params
             )
             response.raise_for_status()

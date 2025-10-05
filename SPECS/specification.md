@@ -38,15 +38,39 @@ O projeto deve responder com dados em formato JSON com as informações obtidas 
 	Nome Técnico (Short Name): S5P_L2__AER_AI (o mesmo do Aerosol Index, o arquivo contém múltiplas variáveis).
 	Acesso Programático: earthaccess.
 
-	B. Focos de Incêndio (para a "História Ambiental")
 	O que é: VIIRS Active Fires. Detecta focos de calor na superfície, indicando possíveis queimadas.
 	Fonte: VIIRS/Suomi NPP Thermal Anomalies/Active Fire.
 	Link da API (Recomendado): NASA FIRMS (Fire Information for Resource Management System) API. É a forma mais fácil e direta.
 	Link: https://firms.modaps.eosdis.nasa.gov/web-services/
 
+5. Imagens de Satélite e Visualizações (GIBS) 🛰️
+	O que é: NASA GIBS (Global Imagery Browse Services) fornece acesso rápido a imagens de satélite e visualizações de dados ambientais.
+	Fonte: GIBS WMS/WMTS
+	Link: https://nasa-gibs.github.io/gibs-api-docs/
+	Acesso Programático: Use OWSLib para acessar WMS. Não requer autenticação.
+	
+	Camadas Disponíveis:
+	- MODIS_Terra_CorrectedReflectance_TrueColor (Imagem em cores reais)
+	- MODIS_Combined_Value_Added_AOD (Aerosol - qualidade do ar)
+	- GPM_3IMERGHH_Precipitation_Rate (Precipitação)
+	- MODIS_Terra_Thermal_Anomalies_All (Incêndios)
+	- MODIS_Terra_Land_Surface_Temp_Day/Night (Temperatura superfície)
+	- MODIS_Terra_NDVI_8Day (Vegetação)
+	
+	Vantagens:
+	- ✅ Sem autenticação necessária
+	- ✅ Muito rápido (< 1 segundo)
+	- ✅ Retorna URLs de imagens prontas para visualização
+	- ✅ 1000+ camadas disponíveis
+
 Para dados em grade (grade-based data) como IMERG, TROPOMI, MERRA-2: Sua ferramenta principal será a biblioteca earthaccess em Python.
 Para dados de pontos (point-based data) como estações em solo e focos de incêndio: Use as APIs específicas (OpenAQ e FIRMS), que são mais diretas.
+Para visualizações e imagens de satélite: Use NASA GIBS via OWSLib (WMS).
 
-Comece instalando o earthaccess, autentique com seu Earthdata Login e tente baixar um arquivo de cada uma dessas fontes. Ter o fluxo de dados funcionando é o passo mais importante.Ferramenta Essencial nº 1: Sua Conta na NASA
-Ferramenta Essencial nº 2: A Biblioteca Python para Acessar Tudo
-Link: https://earthaccess.readthedocs.io/
+Comece instalando o earthaccess, autentique com seu Earthdata Login e tente baixar um arquivo de cada uma dessas fontes. Ter o fluxo de dados funcionando é o passo mais importante.
+
+Ferramentas Essenciais:
+1. Sua Conta na NASA Earthdata
+2. A Biblioteca earthaccess: https://earthaccess.readthedocs.io/
+3. NASA GIBS para imagens: https://nasa-gibs.github.io/gibs-api-docs/
+4. OWSLib para WMS: https://geopython.github.io/OWSLib/

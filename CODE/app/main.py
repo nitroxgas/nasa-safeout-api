@@ -317,10 +317,21 @@ async def test_page():
                 <h2>📍 Coordenadas e Raio</h2>
                 
                 <div class="presets">
+                    <strong style="display: block; margin-bottom: 10px; color: #667eea;">🇧🇷 Brasil:</strong>
                     <button class="preset-btn" onclick="setPreset(-27.5954, -48.5480, 'Florianópolis, SC')">📍 Florianópolis, SC</button>
                     <button class="preset-btn" onclick="setPreset(-23.5505, -46.6333, 'São Paulo, SP')">📍 São Paulo, SP</button>
                     <button class="preset-btn" onclick="setPreset(-22.9068, -43.1729, 'Rio de Janeiro, RJ')">📍 Rio de Janeiro, RJ</button>
                     <button class="preset-btn" onclick="setPreset(-15.7801, -47.9292, 'Brasília, DF')">📍 Brasília, DF</button>
+                    
+                    <strong style="display: block; margin: 15px 0 10px 0; color: #667eea;">🇺🇸 Estados Unidos:</strong>
+                    <button class="preset-btn" onclick="setPreset(40.7128, -74.0060, 'New York, NY')">📍 New York, NY</button>
+                    <button class="preset-btn" onclick="setPreset(34.0522, -118.2437, 'Los Angeles, CA')">📍 Los Angeles, CA</button>
+                    <button class="preset-btn" onclick="setPreset(41.8781, -87.6298, 'Chicago, IL')">📍 Chicago, IL</button>
+                    <button class="preset-btn" onclick="setPreset(29.7604, -95.3698, 'Houston, TX')">📍 Houston, TX</button>
+                    <button class="preset-btn" onclick="setPreset(33.4484, -112.0740, 'Phoenix, AZ')">📍 Phoenix, AZ</button>
+                    <button class="preset-btn" onclick="setPreset(37.7749, -122.4194, 'San Francisco, CA')">📍 San Francisco, CA</button>
+                    <button class="preset-btn" onclick="setPreset(47.6062, -122.3321, 'Seattle, WA')">📍 Seattle, WA</button>
+                    <button class="preset-btn" onclick="setPreset(25.7617, -80.1918, 'Miami, FL')">📍 Miami, FL</button>
                 </div>
                 
                 <div class="form-group">

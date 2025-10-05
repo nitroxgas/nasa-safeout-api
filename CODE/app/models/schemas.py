@@ -173,6 +173,7 @@ class EnvironmentalData(BaseModel):
     weather: Optional[WeatherData] = None
     uv_index: Optional[UVIndexData] = None
     fire_history: Optional[FireHistoryData] = None
+    satellite_imagery: Optional[Dict[str, Any]] = None
 
 
 class ResponseMetadata(BaseModel):

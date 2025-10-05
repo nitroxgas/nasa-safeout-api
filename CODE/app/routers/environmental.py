@@ -131,6 +131,24 @@ async def get_environmental_data(request: LocationRequest):
             logger.error(f"Error fetching UV index data: {e}")
             warnings.append(f"UV index data error: {str(e)}")
         
+        # Fetch GIBS imagery data
+        try:
+            data_sources_queried += 1
+            gibs_imagery = processor.get_gibs_imagery(
+                request.latitude, request.longitude, request.radius_meters
+            )
+            if gibs_imagery:
+                # Add GIBS data to response (will be added to metadata or separate field)
+                if not hasattr(env_data, 'satellite_imagery'):
+                    env_data.satellite_imagery = gibs_imagery
+                data_sources_successful += 1
+                logger.info("GIBS imagery data fetched successfully")
+            else:
+                warnings.append("GIBS satellite imagery unavailable")
+        except Exception as e:
+            logger.error(f"Error fetching GIBS imagery: {e}")
+            warnings.append(f"GIBS imagery error: {str(e)}")
+        
         # Close processor connections
         try:
             await processor.close()

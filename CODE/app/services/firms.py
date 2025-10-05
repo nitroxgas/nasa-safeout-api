@@ -54,12 +54,32 @@ class FIRMSService:
         days_back = max(1, min(10, days_back))
         
         try:
-            # FIRMS API endpoint for area search
+            # Calculate bounding box from center point and radius
+            # 1 degree latitude ≈ 111 km
+            lat_offset = radius_km / 111.0
+            lon_offset = radius_km / (111.0 * abs(max(abs(latitude), 0.1)))
+            
+            west = longitude - lon_offset
+            south = latitude - lat_offset
+            east = longitude + lon_offset
+            north = latitude + lat_offset
+            
+            # Calculate date range
+            end_date = datetime.utcnow()
+            start_date = end_date - timedelta(days=days_back)
+            
+            # FIRMS API endpoint for area search with bbox
+            # Format: /area/csv/{MAP_KEY}/{source}/{area}/{dayRange}/{date}
+            # area format: west,south,east,north
             url = (
                 f"{self.BASE_URL}/area/csv/"
                 f"{self.api_key}/{source}/"
-                f"{latitude},{longitude}/{radius_km}/{days_back}"
+                f"{west},{south},{east},{north}/"
+                f"{days_back}/"
+                f"{end_date.strftime('%Y-%m-%d')}"
             )
+            
+            logger.info(f"FIRMS request: bbox=({west},{south},{east},{north}), days={days_back}")
             
             response = await self.client.get(url)
             response.raise_for_status()

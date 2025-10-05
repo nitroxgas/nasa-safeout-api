@@ -19,6 +19,8 @@ from app.models.schemas import (
 )
 from app.services.openaq import OpenAQService
 from app.services.firms import FIRMSService
+from app.services.earthdata import EarthdataService
+from app.services.gibs import GIBSService
 from app.utils.geo_utils import (
     haversine_distance,
     categorize_uv_index,
@@ -39,6 +41,8 @@ class DataProcessor:
         self.logger = logging.getLogger(__name__)
         self.openaq_service = OpenAQService()
         self.firms_service = FIRMSService()
+        self.earthdata_service = EarthdataService()
+        self.gibs_service = GIBSService()
     
     async def get_precipitation_data(
         self,
@@ -59,10 +63,29 @@ class DataProcessor:
         """
         try:
             self.logger.info("Fetching precipitation data from IMERG")
-            # TODO: Implement earthaccess integration for GPM_3IMERGHHE
-            return None
+            
+            # Convert radius to km
+            radius_km = radius_meters / 1000.0
+            
+            # Get IMERG data
+            imerg_data = self.earthdata_service.get_imerg_data(
+                latitude, longitude, radius_km, hours_back=24
+            )
+            
+            if not imerg_data:
+                return None
+            
+            # Convert to PrecipitationData schema
+            return PrecipitationData(
+                source="GPM IMERG",
+                last_update=imerg_data.get("timestamp"),
+                precipitation_rate_mm_hr=imerg_data.get("precipitation_rate_mm_hr"),
+                forecast_hours=None,
+                confidence="high"
+            )
+            
         except Exception as e:
-            self.logger.error(f"Error fetching precipitation data: {e}")
+            self.logger.error(f"Error fetching precipitation data: {e}", exc_info=True)
             return None
     
     async def get_air_quality_data(
@@ -179,14 +202,28 @@ class DataProcessor:
                     average=average if average else None
                 )
             
-            # Satellite data placeholder (TROPOMI requires earthaccess)
-            satellite = SatelliteAirQuality(
-                source="TROPOMI/Sentinel-5P",
-                last_update=None,
-                aerosol_index=None,
-                no2_mol_m2=None,
-                quality_flag="unavailable"
+            # Get satellite data from TROPOMI
+            radius_km = radius_meters / 1000.0
+            tropomi_data = self.earthdata_service.get_tropomi_data(
+                latitude, longitude, radius_km, days_back=3
             )
+            
+            if tropomi_data:
+                satellite = SatelliteAirQuality(
+                    source=tropomi_data.get("source", "TROPOMI/Sentinel-5P"),
+                    last_update=tropomi_data.get("timestamp"),
+                    aerosol_index=tropomi_data.get("aerosol_index"),
+                    no2_mol_m2=tropomi_data.get("no2_column_mol_m2"),
+                    quality_flag=tropomi_data.get("quality_flag", "unknown")
+                )
+            else:
+                satellite = SatelliteAirQuality(
+                    source="TROPOMI/Sentinel-5P",
+                    last_update=None,
+                    aerosol_index=None,
+                    no2_mol_m2=None,
+                    quality_flag="unavailable"
+                )
             
             return AirQualityData(
                 satellite=satellite,
@@ -216,10 +253,41 @@ class DataProcessor:
         """
         try:
             self.logger.info("Fetching weather data from MERRA-2")
-            # TODO: Implement earthaccess integration for M2I1NXASM
-            return None
+            
+            # Convert radius to km
+            radius_km = radius_meters / 1000.0
+            
+            # Get MERRA-2 data
+            merra2_data = self.earthdata_service.get_merra2_data(
+                latitude, longitude, radius_km, hours_back=24
+            )
+            
+            if not merra2_data:
+                return None
+            
+            # Create wind data if available
+            wind = None
+            if merra2_data.get("wind_speed_ms") is not None:
+                wind = WindData(
+                    speed_ms=merra2_data.get("wind_speed_ms"),
+                    speed_kmh=merra2_data.get("wind_speed_kmh"),
+                    direction_degrees=merra2_data.get("wind_direction_deg"),
+                    direction_cardinal=direction_to_cardinal(merra2_data.get("wind_direction_deg")) if merra2_data.get("wind_direction_deg") else None
+                )
+            
+            # Convert to WeatherData schema
+            return WeatherData(
+                source="MERRA-2",
+                last_update=merra2_data.get("timestamp"),
+                temperature_celsius=merra2_data.get("temperature_celsius"),
+                temperature_fahrenheit=celsius_to_fahrenheit(merra2_data.get("temperature_celsius")) if merra2_data.get("temperature_celsius") else None,
+                humidity_percent=merra2_data.get("humidity_percent"),
+                pressure_hpa=merra2_data.get("pressure_pa") / 100 if merra2_data.get("pressure_pa") else None,
+                wind=wind
+            )
+            
         except Exception as e:
-            self.logger.error(f"Error fetching weather data: {e}")
+            self.logger.error(f"Error fetching weather data: {e}", exc_info=True)
             return None
     
     async def get_uv_index_data(
@@ -241,10 +309,29 @@ class DataProcessor:
         """
         try:
             self.logger.info("Fetching UV index data from TROPOMI")
-            # TODO: Implement earthaccess integration for S5P_L2__AER_AI
-            return None
+            
+            # Convert radius to km
+            radius_km = radius_meters / 1000.0
+            
+            # Get UV index data
+            uv_data = self.earthdata_service.get_uv_index_data(
+                latitude, longitude, radius_km
+            )
+            
+            if not uv_data:
+                return None
+            
+            # Convert to UVIndexData schema
+            return UVIndexData(
+                source=uv_data.get("source", "TROPOMI"),
+                last_update=uv_data.get("timestamp"),
+                uv_index=uv_data.get("uv_index"),
+                category=uv_data.get("category"),
+                risk_level=uv_data.get("risk_level")
+            )
+            
         except Exception as e:
-            self.logger.error(f"Error fetching UV index data: {e}")
+            self.logger.error(f"Error fetching UV index data: {e}", exc_info=True)
             return None
     
     async def get_fire_history_data(
@@ -325,6 +412,46 @@ class DataProcessor:
             
         except Exception as e:
             self.logger.error(f"Error fetching fire history data: {e}", exc_info=True)
+            return None
+    
+    def get_gibs_imagery(
+        self,
+        latitude: float,
+        longitude: float,
+        radius_meters: int
+    ) -> Optional[dict]:
+        """
+        Get GIBS satellite imagery URLs for a location.
+        
+        Args:
+            latitude: Latitude in decimal degrees
+            longitude: Longitude in decimal degrees
+            radius_meters: Radius around point in meters
+            
+        Returns:
+            Dictionary with imagery URLs or None
+        """
+        try:
+            self.logger.info(f"Fetching GIBS imagery for ({latitude}, {longitude})")
+            
+            radius_km = radius_meters / 1000.0
+            
+            # Get environmental imagery
+            imagery_data = self.gibs_service.get_environmental_data(
+                latitude,
+                longitude,
+                radius_km
+            )
+            
+            if imagery_data:
+                self.logger.info(f"Successfully fetched GIBS imagery: {len(imagery_data.get('imagery', {}))} layers")
+                return imagery_data
+            else:
+                self.logger.warning("No GIBS imagery data available")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error fetching GIBS imagery: {e}", exc_info=True)
             return None
     
     async def close(self):

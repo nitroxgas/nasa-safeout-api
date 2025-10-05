@@ -14,12 +14,14 @@ class Settings(BaseSettings):
         case_sensitive=False
     )
     
-    # NASA Earthdata Credentials
-    earthdata_username: str = ""
-    earthdata_password: str = ""
+    # NASA Earthdata Credentials (Token only)
+    earthdata_token: str = ""
     
     # NASA FIRMS API
     firms_api_key: str = ""
+    
+    # OpenAQ API
+    openaq_api_key: str = ""
     
     # API Configuration
     api_host: str = "0.0.0.0"

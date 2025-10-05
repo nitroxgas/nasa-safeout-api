@@ -11,23 +11,24 @@ print("=" * 60)
 print("NASA Earthdata Authentication Test")
 print("=" * 60)
 
-# Check if credentials are in environment
-username = os.getenv("EARTHDATA_USERNAME")
-password = os.getenv("EARTHDATA_PASSWORD")
+# Check if token is in environment
+token = os.getenv("EARTHDATA_TOKEN")
 
 print("\n1. Checking environment variables...")
-print(f"   EARTHDATA_USERNAME: {'✓ Set' if username else '✗ Not set'}")
-print(f"   EARTHDATA_PASSWORD: {'✓ Set' if password else '✗ Not set'}")
+print(f"   EARTHDATA_TOKEN: {'✓ Set' if token else '✗ Not set'}")
 
-if not username or not password:
-    print("\n❌ ERROR: Credentials not found in .env file")
+if not token:
+    print("\n❌ ERROR: Token not found in .env file")
     print("\nPlease ensure your .env file contains:")
-    print("   EARTHDATA_USERNAME=your_username")
-    print("   EARTHDATA_PASSWORD=your_password")
+    print("   EARTHDATA_TOKEN=your_token")
+    print("\nTo get a token:")
+    print("   1. Go to https://urs.earthdata.nasa.gov/profile")
+    print("   2. Click 'Generate Token'")
+    print("   3. Copy the token to your .env file")
     sys.exit(1)
 
-print(f"\n   Username: {username}")
-print(f"   Password: {'*' * len(password)}")
+print(f"\n   Using Token Authentication")
+print(f"   Token: {token[:50]}..." if len(token) > 50 else f"   Token: {token}")
 
 # Try to import earthaccess
 print("\n2. Checking earthaccess library...")
@@ -43,34 +44,35 @@ except ImportError:
 # Try to authenticate
 print("\n3. Testing authentication with NASA Earthdata...")
 try:
-    # Set environment variables for earthaccess
-    os.environ["EARTHDATA_USERNAME"] = username
-    os.environ["EARTHDATA_PASSWORD"] = password
+    # Set environment variable for earthaccess
+    os.environ["EARTHDATA_TOKEN"] = token
+    print("   Using token authentication...")
     
     # Try to login
     auth = earthaccess.login(strategy="environment", persist=True)
     
     if auth and auth.authenticated:
         print("   ✓ Authentication SUCCESSFUL!")
-        print(f"   Authenticated as: {username}")
+        print(f"   Authenticated using token")
     else:
         print("   ✗ Authentication FAILED")
         print("\nPossible issues:")
-        print("   1. Invalid username or password")
-        print("   2. Account not activated")
+        print("   1. Invalid or expired token")
+        print("   2. Token not properly formatted")
         print("   3. Network issues")
-        print("\nPlease verify your credentials at:")
-        print("   https://urs.earthdata.nasa.gov/")
+        print("\nPlease verify:")
+        print("   1. Generate a new token at https://urs.earthdata.nasa.gov/profile")
+        print("   2. Update your .env file with the new token")
         sys.exit(1)
         
 except Exception as e:
     print(f"   ✗ Authentication ERROR: {e}")
     print("\nPossible issues:")
-    print("   1. Invalid credentials")
+    print("   1. Invalid or expired token")
     print("   2. Network connectivity")
     print("   3. NASA Earthdata service unavailable")
     print("\nPlease verify:")
-    print("   1. Your credentials at https://urs.earthdata.nasa.gov/")
+    print("   1. Your token at https://urs.earthdata.nasa.gov/profile")
     print("   2. Your internet connection")
     sys.exit(1)
 
